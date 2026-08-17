@@ -129,3 +129,21 @@ LOGOUT_REDIRECT_URL = 'booking:home'
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 # Console backend prints emails to the terminal - swap for a real backend (e.g. SMTP) in production.
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+import os
+
+# Read configuration from environment variables
+SECRET_KEY = os.environ.get('SECRET_KEY', 'your-fallback-dev-key')
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
+
+# Add WhiteNoise middleware right after SecurityMiddleware
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Add here
+    # ... rest of your middleware ...
+]
+
+# Ensure static files storage configuration is set
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
