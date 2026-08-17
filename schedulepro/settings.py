@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-rclja_cr*(8_)%ou^xbg=^4yn63cy^3$71@u#q+%&ys*gbnp*i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['schedulepro-1bm6.onrender.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
