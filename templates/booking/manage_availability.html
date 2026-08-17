@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block title %}My availability{% endblock %}
+{% block content %}
+<h1 class="h4 mb-4">My weekly availability</h1>
+
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="h6">Add a weekly time block</h2>
+                <form method="post">
+                    {% csrf_token %}
+                    {% for field in form %}
+                        <div class="mb-2">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary btn-sm mt-2">Add block</button>
+                </form>
+
+                <hr>
+                <ul class="list-group">
+                    {% for slot in slots %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ slot.get_day_of_week_display }}: {{ slot.start_time|time:"H:i" }}&ndash;{{ slot.end_time|time:"H:i" }}
+                            <form method="post" action="{% url 'booking:delete_availability' slot.pk %}">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                            </form>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No availability set yet.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h2 class="h6">Time off</h2>
+                <form method="post" action="{% url 'booking:add_time_off' %}">
+                    {% csrf_token %}
+                    {% for field in time_off_form %}
+                        <div class="mb-2">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field }}
+                            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+                        </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary btn-sm mt-2">Add time off</button>
+                </form>
+
+                <hr>
+                <ul class="list-group">
+                    {% for off in time_off %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ off.start_date }} &ndash; {{ off.end_date }} {% if off.reason %}({{ off.reason }}){% endif %}
+                            <form method="post" action="{% url 'booking:delete_time_off' off.pk %}">
+                                {% csrf_token %}
+                                <button class="btn btn-sm btn-outline-danger">Remove</button>
+                            </form>
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">No time off scheduled.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

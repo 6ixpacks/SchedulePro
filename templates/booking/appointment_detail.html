@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Appointment details{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h1 class="h4 mb-0">{{ appointment.service.name }}</h1>
+                    <span class="badge badge-{{ appointment.status }}">{{ appointment.get_status_display }}</span>
+                </div>
+                <p class="mb-1"><strong>With:</strong> {{ appointment.staff.get_full_name|default:appointment.staff.username }}</p>
+                <p class="mb-1"><strong>Customer:</strong> {{ appointment.customer.get_full_name|default:appointment.customer.username }}</p>
+                <p class="mb-1"><strong>Date:</strong> {{ appointment.date }}</p>
+                <p class="mb-1"><strong>Time:</strong> {{ appointment.start_time|time:"H:i" }} &ndash; {{ appointment.end_time|time:"H:i" }}</p>
+                <p class="mb-1"><strong>Price:</strong> ₦{{ appointment.service.price }}</p>
+                {% if appointment.notes %}<p class="mb-1"><strong>Notes:</strong> {{ appointment.notes }}</p>{% endif %}
+
+                {% if appointment.status == 'pending' or appointment.status == 'confirmed' %}
+                    <a href="{% url 'booking:appointment_cancel' appointment.pk %}" class="btn btn-outline-danger mt-3">Cancel appointment</a>
+                {% endif %}
+                <a href="{% url 'booking:dashboard' %}" class="btn btn-outline-secondary mt-3">Back to dashboard</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

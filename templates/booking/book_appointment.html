@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% block title %}Book an appointment{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="h4 mb-4">Book an appointment</h1>
+                <form method="post" id="booking-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Service</label>
+                        <select name="service" id="id_service" required>
+                            <option value="">-- Choose a service --</option>
+                            {% for service in services %}
+                                <option value="{{ service.id }}" data-duration="{{ service.duration_minutes }}">
+                                    {{ service.name }} ({{ service.duration_minutes }} min &ndash; ₦{{ service.price }})
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Staff member</label>
+                        <select name="staff" id="id_staff" required disabled>
+                            <option value="">-- Choose a service first --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="date" name="date" id="id_date" required disabled min="{{ today|default:'' }}">
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Available times</label>
+                        <div id="slots-container" class="d-flex flex-wrap gap-2">
+                            <span class="text-muted small">Choose a service, staff member, and date to see open slots.</span>
+                        </div>
+                        <input type="hidden" name="time" id="id_time" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Notes (optional)</label>
+                        <textarea name="notes" rows="3" placeholder="Anything the staff should know?"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" id="submit-btn" disabled>Confirm booking</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const serviceSelect = document.getElementById('id_service');
+const staffSelect = document.getElementById('id_staff');
+const dateInput = document.getElementById('id_date');
+const slotsContainer = document.getElementById('slots-container');
+const timeInput = document.getElementById('id_time');
+const submitBtn = document.getElementById('submit-btn');
+
+function resetSlots(message) {
+    slotsContainer.innerHTML = `<span class="text-muted small">${message}</span>`;
+    timeInput.value = '';
+    submitBtn.disabled = true;
+}
+
+serviceSelect.addEventListener('change', async () => {
+    resetSlots('Choose a staff member and date to see open slots.');
+    dateInput.value = '';
+    dateInput.disabled = true;
+    if (!serviceSelect.value) {
+        staffSelect.disabled = true;
+        staffSelect.innerHTML = '<option value="">-- Choose a service first --</option>';
+        return;
+    }
+    const resp = await fetch(`/api/staff-for-service/?service_id=${serviceSelect.value}`);
+    const data = await resp.json();
+    staffSelect.innerHTML = '<option value="">-- Choose a staff member --</option>';
+    data.staff.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        staffSelect.appendChild(opt);
+    });
+    staffSelect.disabled = data.staff.length === 0;
+    if (data.staff.length === 0) {
+        resetSlots('No staff members are currently assigned to this service.');
+    }
+});
+
+staffSelect.addEventListener('change', () => {
+    dateInput.disabled = !staffSelect.value;
+    resetSlots('Choose a date to see open slots.');
+});
+
+dateInput.addEventListener('change', loadSlots);
+
+async function loadSlots() {
+    resetSlots('Loading available times…');
+    if (!serviceSelect.value || !staffSelect.value || !dateInput.value) return;
+    const resp = await fetch(`/api/available-slots/?service_id=${serviceSelect.value}&staff_id=${staffSelect.value}&date=${dateInput.value}`);
+    const data = await resp.json();
+    if (data.slots.length === 0) {
+        resetSlots('No open slots on this date. Try another date.');
+        return;
+    }
+    slotsContainer.innerHTML = '';
+    data.slots.forEach(slot => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-outline-primary btn-sm slot-btn';
+        btn.textContent = slot;
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            timeInput.value = slot;
+            submitBtn.disabled = false;
+        });
+        slotsContainer.appendChild(btn);
+    });
+}
+
+// Prevent picking a past date.
+dateInput.min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}My dashboard{% endblock %}
+{% block content %}
+<h1 class="h4 mb-4">My appointments</h1>
+
+<h2 class="h6 text-muted text-uppercase">Upcoming</h2>
+<div class="list-group mb-4">
+    {% for appt in upcoming %}
+        <a href="{% url 'booking:appointment_detail' appt.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ appt.service.name }}</strong> with {{ appt.staff.get_full_name|default:appt.staff.username }}
+                <div class="small text-muted">{{ appt.date }} at {{ appt.start_time|time:"H:i" }}</div>
+            </div>
+            <span class="badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span>
+        </a>
+    {% empty %}
+        <p class="text-muted">No upcoming appointments. <a href="{% url 'booking:book_appointment' %}">Book one now</a>.</p>
+    {% endfor %}
+</div>
+
+<h2 class="h6 text-muted text-uppercase">Past</h2>
+<div class="list-group">
+    {% for appt in past %}
+        <a href="{% url 'booking:appointment_detail' appt.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ appt.service.name }}</strong> with {{ appt.staff.get_full_name|default:appt.staff.username }}
+                <div class="small text-muted">{{ appt.date }} at {{ appt.start_time|time:"H:i" }}</div>
+            </div>
+            <span class="badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span>
+        </a>
+    {% empty %}
+        <p class="text-muted">No past appointments yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

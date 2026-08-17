@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Staff dashboard{% endblock %}
+{% block content %}
+<h1 class="h4 mb-4">Upcoming appointments</h1>
+<div class="list-group">
+    {% for appt in appointments %}
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <strong>{{ appt.service.name }}</strong> with {{ appt.customer.get_full_name|default:appt.customer.username }}
+                    <div class="small text-muted">{{ appt.date }} at {{ appt.start_time|time:"H:i" }}&ndash;{{ appt.end_time|time:"H:i" }}</div>
+                    {% if appt.notes %}<div class="small mt-1"><em>{{ appt.notes }}</em></div>{% endif %}
+                </div>
+                <span class="badge badge-{{ appt.status }}">{{ appt.get_status_display }}</span>
+            </div>
+            {% if appt.status == 'pending' or appt.status == 'confirmed' %}
+            <form method="post" action="{% url 'booking:appointment_confirm' appt.pk %}" class="mt-2 d-flex gap-2">
+                {% csrf_token %}
+                {% if appt.status == 'pending' %}
+                    <button class="btn btn-sm btn-success" name="status" value="confirmed">Confirm</button>
+                {% endif %}
+                <button class="btn btn-sm btn-outline-primary" name="status" value="completed">Mark completed</button>
+                <button class="btn btn-sm btn-outline-danger" name="status" value="cancelled">Cancel</button>
+            </form>
+            {% endif %}
+        </div>
+    {% empty %}
+        <p class="text-muted">No upcoming appointments.</p>
+    {% endfor %}
+</div>
+{% endblock %}
